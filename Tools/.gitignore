@@ -1,0 +1,30 @@
+
+```gitignore
+# .gitignore
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.env
+venv/
+env/
+
+# Node modules (if you add any JS tools)
+node_modules/
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# Build outputs
+dist/
+build/
