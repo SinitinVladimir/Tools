@@ -69,10 +69,15 @@ class MiniImageEditor(TkinterDnD.Tk):
             ("Open Image", self.open_image),
             ("Resize", self.resize_layer),
             ("Crop", self.crop_layer),
+            ("Rotate", self.rotate_layer),
+            ("Flip H", self.flip_horizontal),
+            ("Flip V", self.flip_vertical),
             ("Brightness", self.brightness_layer),
+            ("Grayscale", self.grayscale_layer),
             ("Negative", self.negative_layer),
             ("Add Text", self.add_text),
-            ("Save As...", self.save_image)
+            ("Save As...", self.save_image),
+            ("Export PDF", self.export_pdf)
         ]
         for txt, cmd in ops:
             btn = tk.Button(toolbar, text=txt, command=cmd,
@@ -253,6 +258,41 @@ class MiniImageEditor(TkinterDnD.Tk):
         self.selected.scale = 1.0
         self.redraw()
 
+    def rotate_layer(self):
+        if not self.selected:
+            messagebox.showinfo("Rotate", "Select a layer first")
+            return
+        angle = simpledialog.askfloat("Rotate", "Angle (degrees):", initialvalue=0.0)
+        if angle is None:
+            return
+        self.selected.orig = self.selected.orig.rotate(angle, expand=True)
+        self.selected.scale = 1.0
+        self.redraw()
+
+    def grayscale_layer(self):
+        if not self.selected:
+            messagebox.showinfo("Grayscale", "Select a layer first")
+            return
+        self.selected.orig = self.selected.orig.convert("L").convert("RGBA")
+        self.selected.scale = 1.0
+        self.redraw()
+
+    def flip_horizontal(self):
+        if not self.selected:
+            messagebox.showinfo("Flip H", "Select a layer first")
+            return
+        self.selected.orig = self.selected.orig.transpose(Image.FLIP_LEFT_RIGHT)
+        self.selected.scale = 1.0
+        self.redraw()
+
+    def flip_vertical(self):
+        if not self.selected:
+            messagebox.showinfo("Flip V", "Select a layer first")
+            return
+        self.selected.orig = self.selected.orig.transpose(Image.FLIP_TOP_BOTTOM)
+        self.selected.scale = 1.0
+        self.redraw()
+
     def add_text(self):
         if not self.selected:
             messagebox.showinfo("Text", "Select a layer first")
@@ -304,6 +344,19 @@ class MiniImageEditor(TkinterDnD.Tk):
             fmt = "GIF"; out = base.convert("RGB")
         out.save(path, format=fmt)
         messagebox.showinfo("Saved", f"Saved to {path}")
+
+    def export_pdf(self):
+        w = int(self.canvas["width"])
+        h = int(self.canvas["height"])
+        base = Image.new("RGBA", (w, h), (255,255,255,255))
+        for layer in self.layers:
+            base.paste(layer.img, (layer.x, layer.y), layer.img)
+        path = filedialog.asksaveasfilename(defaultextension=".pdf",
+                                            filetypes=[("PDF", "*.pdf")])
+        if not path:
+            return
+        base.convert("RGB").save(path, "PDF")
+        messagebox.showinfo("Saved", f"PDF saved to {path}")
 
     def _check_gif(self):
         times = [l.taken_time for l in self.layers]
